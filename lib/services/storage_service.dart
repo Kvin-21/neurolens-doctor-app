@@ -12,6 +12,9 @@ class StorageService {
   final _secureStorage = const FlutterSecureStorage();
   SharedPreferences? _prefs;
 
+  static const _patientsKey = 'patients_data';
+  static const _mappingsKey = 'patient_mappings';
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
