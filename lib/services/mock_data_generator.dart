@@ -73,6 +73,9 @@ class MockDataGenerator {
     final mmse = baseMMSE.clamp(0, 30);
 
     return Session(
+      sessionId: 'S${(index + 1).toString().padLeft(3, '0')}',
+      timestamp: timestamp,
+      mmseScore: mmse,
       diagnosisProbabilities: _buildDiagnosisProbabilities(mmse, random),
       severityEstimate: _buildSeverityEstimate(mmse, random),
       acousticFeatures: _buildAcousticFeatures(mmse, random),

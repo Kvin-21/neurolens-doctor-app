@@ -14,6 +14,9 @@ class Session {
   Session({
     required this.sessionId,
     required this.timestamp,
+    required this.mmseScore,
+    required this.diagnosisProbabilities,
+    required this.severityEstimate,
     required this.acousticFeatures,
     required this.linguisticFeatures,
     required this.llmClinicalScores,
@@ -42,6 +45,8 @@ class Session {
         'timestamp': timestamp.toIso8601String(),
         'mmse_score': mmseScore,
         'diagnosis_probabilities': diagnosisProbabilities.toJson(),
+        'severity_estimate': severityEstimate.toJson(),
+        'acoustic_features': acousticFeatures.toJson(),
         'linguistic_features': linguisticFeatures.toJson(),
         'llm_clinical_scores': llmClinicalScores.toJson(),
       };
