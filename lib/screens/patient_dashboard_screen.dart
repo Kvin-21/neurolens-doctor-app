@@ -82,6 +82,16 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
             ),
           ],
         ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelColor: AppColors.primaryStart,
+        unselectedLabelColor: Colors.white.withValues(alpha: 0.9),
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+        dividerColor: Colors.transparent,
+        tabs: const [
+          Tab(text: 'Dashboard'),
+          Tab(text: 'Detailed Features'),
+        ],
       ),
     );
   }

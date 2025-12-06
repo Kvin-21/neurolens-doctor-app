@@ -193,6 +193,46 @@ class FeaturesScreen extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildFeatureCard(String label, String value, IconData icon) {
+    return GlassmorphicCard(
+      width: 260,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 18, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(fontSize: 13, color: AppColors.cardText, fontWeight: FontWeight.w600),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.cardText),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildScoreCard(String label, int score) {
     final colour = _scoreColour(score);
     return GlassmorphicCard(
