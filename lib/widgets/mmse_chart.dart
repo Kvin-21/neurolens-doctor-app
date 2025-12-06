@@ -185,6 +185,17 @@ class _MMSEChartState extends State<MMSEChart> {
                 strokeColor: Colors.white,
               ),
             ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primaryStart.withValues(alpha: 0.3),
+                  AppColors.primaryStart.withValues(alpha: 0.0),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
           ),
         ],
         lineTouchData: LineTouchData(

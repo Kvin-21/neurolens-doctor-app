@@ -78,6 +78,26 @@ class FeatureCards extends StatelessWidget {
     );
   }
 
+  Widget _buildCardHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.cardText),
+        ),
+      ],
+    );
+  }
+
   Widget _buildMetricRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
