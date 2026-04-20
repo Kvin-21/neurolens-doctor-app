@@ -20,8 +20,8 @@ class Patient {
         [];
 
     return Patient(
-      patientId: json['patient_id'] ?? '',
-      displayName: json['display_name'] ?? '',
+      patientId: json['patient_id']?.toString() ?? '',
+      displayName: json['display_name']?.toString() ?? '',
       sessions: sessionsList,
     );
   }
@@ -49,16 +49,22 @@ class Patient {
 
   int getTotalSessions() => sessions.length;
 
-  /// Returns trend arrow based on MMSE change over recent sessions.
-  /// Note: In this implementation, ↓ indicates MMSE score rising, ↑ indicates falling.
-  String getTrendIndicator() {
+  String getTrendIndicator({int? days}) {
     if (sessions.length < 2) return '—';
 
     final sortedSessions = List<Session>.from(sessions)
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-    final recentCount = sortedSessions.length > 5 ? 5 : sortedSessions.length;
-    final recent = sortedSessions.sublist(sortedSessions.length - recentCount);
+    final List<Session> scoped;
+    if (days != null && days > 0) {
+      final cutoff = DateTime.now().subtract(Duration(days: days));
+      scoped = sortedSessions.where((s) => s.timestamp.isAfter(cutoff)).toList();
+    } else {
+      scoped = sortedSessions;
+    }
+
+    final recentCount = scoped.length > 5 ? 5 : scoped.length;
+    final recent = scoped.sublist(scoped.length - recentCount);
 
     if (recent.length < 2) return '—';
 
@@ -66,9 +72,8 @@ class Patient {
     final lastMMSE = recent.last.mmseScore;
     final diff = lastMMSE - firstMMSE;
 
-    // Needs >2 point change to count as meaningful trend
-    if (diff > 2) return '↓'; // Lower MMSE = cognitive decline
-    if (diff < -2) return '↑'; // Higher MMSE = improvement
+    if (diff > 2) return '↑';
+    if (diff < -2) return '↓';
     return '—';
   }
 }

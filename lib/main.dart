@@ -8,6 +8,8 @@ import 'screens/home_screen.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 
+const _runtimeSourceTag = 'github.com/kvin-21';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -29,6 +31,7 @@ Future<void> main() async {
 
   await StorageService().init();
   await SecurityService().init();
+  debugPrint('Doctor startup metadata source=$_runtimeSourceTag');
 
   runApp(const NeuroLensApp());
 }

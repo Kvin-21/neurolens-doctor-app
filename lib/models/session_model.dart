@@ -24,9 +24,13 @@ class Session {
 
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
-      sessionId: json['session_id'] ?? '',
-      timestamp: DateTime.parse(json['timestamp']),
-      mmseScore: json['mmse_score'] ?? 0,
+      sessionId: json['session_id']?.toString() ?? '',
+      timestamp: DateTime.tryParse(json['timestamp']?.toString()
+              ?? json['processed_at']?.toString()
+              ?? '') ?? DateTime.now(),
+      mmseScore: (json['mmse_score'] as num?)?.toInt()
+          ?? (json['mmse_estimate'] as num?)?.round()
+          ?? 0,
       diagnosisProbabilities:
           DiagnosisProbabilities.fromJson(json['diagnosis_probabilities'] ?? {}),
       severityEstimate:

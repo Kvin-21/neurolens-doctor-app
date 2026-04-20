@@ -60,7 +60,7 @@ class AcousticFeatures {
       dynamicRange: (json['dynamic_range'] ?? 0).toDouble(),
       syllablesPerSec: (json['syllables_per_sec'] ?? 0).toDouble(),
       wordsPerSec: (json['words_per_sec'] ?? 0).toDouble(),
-      pauseCount: json['pause_count'] ?? 0,
+      pauseCount: (json['pause_count'] as num?)?.toInt() ?? 0,
       totalPauseDuration: (json['total_pause_duration'] ?? 0).toDouble(),
       pauseRatio: (json['pause_ratio'] ?? 0).toDouble(),
       mfccFeatures: (json['mfcc_features'] as List<dynamic>?)
@@ -140,19 +140,19 @@ class LinguisticFeatures {
 
   factory LinguisticFeatures.fromJson(Map<String, dynamic> json) {
     return LinguisticFeatures(
-      totalTokens: json['total_tokens'] ?? 0,
-      uniqueTokens: json['unique_tokens'] ?? 0,
+      totalTokens: (json['total_tokens'] as num?)?.toInt() ?? 0,
+      uniqueTokens: (json['unique_tokens'] as num?)?.toInt() ?? 0,
       typeTokenRatio: (json['type_token_ratio'] ?? 0).toDouble(),
       meanWordsPerUtterance: (json['mean_words_per_utterance'] ?? 0).toDouble(),
-      maxUtteranceLength: json['max_utterance_length'] ?? 0,
-      sentenceCount: json['sentence_count'] ?? 0,
+      maxUtteranceLength: (json['max_utterance_length'] as num?)?.toInt() ?? 0,
+      sentenceCount: (json['sentence_count'] as num?)?.toInt() ?? 0,
       contentWordsRatio: (json['content_words_ratio'] ?? 0).toDouble(),
       functionWordsRatio: (json['function_words_ratio'] ?? 0).toDouble(),
       rareWordsRatio: (json['rare_words_ratio'] ?? 0).toDouble(),
-      fillerCount: json['filler_count'] ?? 0,
+      fillerCount: (json['filler_count'] as num?)?.toInt() ?? 0,
       repetitionScore: (json['repetition_score'] ?? 0).toDouble(),
       bigramRepetitionRatio: (json['bigram_repetition_ratio'] ?? 0).toDouble(),
-      selfCorrectionCount: json['self_correction_count'] ?? 0,
+      selfCorrectionCount: (json['self_correction_count'] as num?)?.toInt() ?? 0,
       semanticCoherenceMean: (json['semantic_coherence_mean'] ?? 0).toDouble(),
       semanticCoherenceVariance: (json['semantic_coherence_variance'] ?? 0).toDouble(),
     );
@@ -221,24 +221,24 @@ class LLMClinicalScores {
 
   factory LLMClinicalScores.fromJson(Map<String, dynamic> json) {
     return LLMClinicalScores(
-      semanticMemoryDegradation: json['semantic_memory_degradation'] ?? 0,
-      narrativeStructureDisintegration: json['narrative_structure_disintegration'] ?? 0,
-      pragmaticAppropriateness: json['pragmatic_appropriateness'] ?? 0,
-      topicMaintenance: json['topic_maintenance'] ?? 0,
-      perseverationTypes: json['perseveration_types'] ?? 0,
-      disorientationTypes: json['disorientation_types'] ?? 0,
-      executiveDysfunctionPatterns: json['executive_dysfunction_patterns'] ?? 0,
-      abstractReasoning: json['abstract_reasoning'] ?? 0,
-      semanticClusteringVsFragmentation: json['semantic_clustering_vs_fragmentation'] ?? 0,
-      emotionalAppropriateness: json['emotional_appropriateness'] ?? 0,
-      novelInformationContent: json['novel_information_content'] ?? 0,
-      ambiguityVagueness: json['ambiguity_vagueness'] ?? 0,
-      instructionFollowing: json['instruction_following'] ?? 0,
-      logicalSelfConsistency: json['logical_self_consistency'] ?? 0,
-      confabulation: json['confabulation'] ?? 0,
-      clinicalImpression: json['clinical_impression'] ?? 0,
-      errorTypeClassification: json['error_type_classification'] ?? 0,
-      compensationStrategies: json['compensation_strategies'] ?? 0,
+      semanticMemoryDegradation: (json['semantic_memory_degradation'] as num?)?.toInt() ?? 0,
+      narrativeStructureDisintegration: (json['narrative_structure_disintegration'] as num?)?.toInt() ?? 0,
+      pragmaticAppropriateness: (json['pragmatic_appropriateness'] as num?)?.toInt() ?? 0,
+      topicMaintenance: (json['topic_maintenance'] as num?)?.toInt() ?? 0,
+      perseverationTypes: (json['perseveration_types'] as num?)?.toInt() ?? 0,
+      disorientationTypes: (json['disorientation_types'] as num?)?.toInt() ?? 0,
+      executiveDysfunctionPatterns: (json['executive_dysfunction_patterns'] as num?)?.toInt() ?? 0,
+      abstractReasoning: (json['abstract_reasoning'] as num?)?.toInt() ?? 0,
+      semanticClusteringVsFragmentation: (json['semantic_clustering_vs_fragmentation'] as num?)?.toInt() ?? 0,
+      emotionalAppropriateness: (json['emotional_appropriateness'] as num?)?.toInt() ?? 0,
+      novelInformationContent: (json['novel_information_content'] as num?)?.toInt() ?? 0,
+      ambiguityVagueness: (json['ambiguity_vagueness'] as num?)?.toInt() ?? 0,
+      instructionFollowing: (json['instruction_following'] as num?)?.toInt() ?? 0,
+      logicalSelfConsistency: (json['logical_self_consistency'] as num?)?.toInt() ?? 0,
+      confabulation: (json['confabulation'] as num?)?.toInt() ?? 0,
+      clinicalImpression: (json['clinical_impression'] as num?)?.toInt() ?? 0,
+      errorTypeClassification: (json['error_type_classification'] as num?)?.toInt() ?? 0,
+      compensationStrategies: (json['compensation_strategies'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -307,8 +307,8 @@ class SeverityEstimate {
 
   factory SeverityEstimate.fromJson(Map<String, dynamic> json) {
     return SeverityEstimate(
-      mmse: json['mmse'] ?? 0,
-      uncertainty: json['uncertainty'] ?? 0,
+      mmse: (json['mmse'] as num?)?.toInt() ?? 0,
+      uncertainty: (json['uncertainty'] as num?)?.toInt() ?? 0,
     );
   }
 

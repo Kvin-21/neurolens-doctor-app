@@ -91,11 +91,16 @@ class ClinicalScoresWidget extends StatelessWidget {
         const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: score / 4,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: AlwaysStoppedAnimation<Color>(colour),
-            minHeight: 8,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: score / 4),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+            builder: (_, value, __) => LinearProgressIndicator(
+              value: value,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(colour),
+              minHeight: 8,
+            ),
           ),
         ),
       ],
