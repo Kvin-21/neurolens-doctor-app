@@ -7,8 +7,9 @@ import '../widgets/clinical_scores_widget.dart';
 import '../widgets/session_history_list.dart';
 import '../utils/constants.dart';
 import 'features_screen.dart';
+import 'image_screen.dart';
+import 'report_screen.dart';
 
-/// Dashboard with overview and detailed feature tabs for a patient.
 class PatientDashboardScreen extends StatefulWidget {
   final Patient patient;
 
@@ -21,11 +22,17 @@ class PatientDashboardScreen extends StatefulWidget {
 class _PatientDashboardScreenState extends State<PatientDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _selectedRangeIndex = 3;
+
+  int? get _selectedDays {
+    final days = AppConstants.timeRanges[_selectedRangeIndex];
+    return days == -1 ? null : days;
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -36,19 +43,27 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTabBar(),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildDashboard(),
-              FeaturesScreen(patient: widget.patient),
-            ],
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 350),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: Column(
+        key: ValueKey(widget.patient.patientId),
+        children: [
+          _buildTabBar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildDashboard(),
+                FeaturesScreen(patient: widget.patient),
+                ImageScreen(patient: widget.patient),
+                ReportScreen(patient: widget.patient),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -91,6 +106,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
         tabs: const [
           Tab(text: 'Dashboard'),
           Tab(text: 'Detailed Features'),
+          Tab(text: 'Images'),
+          Tab(text: 'Reports'),
         ],
       ),
     );
@@ -102,9 +119,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          OverviewCards(patient: widget.patient),
+          OverviewCards(patient: widget.patient, trendDays: _selectedDays),
           const SizedBox(height: AppConstants.gridSpacing * 3),
-          MMSEChart(sessions: widget.patient.sessions),
+          MMSEChart(
+            sessions: widget.patient.sessions,
+            initialRangeIndex: _selectedRangeIndex,
+            onRangeChanged: (index) => setState(() => _selectedRangeIndex = index),
+          ),
           const SizedBox(height: AppConstants.gridSpacing * 3),
           FeatureCards(patient: widget.patient),
           const SizedBox(height: AppConstants.gridSpacing * 3),
