@@ -5,9 +5,21 @@ import '../utils/constants.dart';
 import 'patient_dashboard_screen.dart';
 import 'add_patient_dialog.dart';
 
-/// Main application screen with patient selection and dashboard.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PatientProvider>().refresh();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +34,21 @@ class HomeScreen extends StatelessWidget {
                 child: Consumer<PatientProvider>(
                   builder: (context, provider, _) {
                     if (provider.isLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(color: Colors.white),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Loading patient data...',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
                       );
                     }
 
@@ -31,7 +56,13 @@ class HomeScreen extends StatelessWidget {
                       return _buildEmptyState(context);
                     }
 
-                    return PatientDashboardScreen(patient: provider.selectedPatient!);
+                    return AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: PatientDashboardScreen(
+                        key: ValueKey(provider.selectedPatient!.patientId),
+                        patient: provider.selectedPatient!,
+                      ),
+                    );
                   },
                 ),
               ),
@@ -78,6 +109,19 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildPatientSelector(BuildContext context, PatientProvider provider) {
+    final uniqueById = <String, dynamic>{};
+    for (final patient in provider.patients) {
+      uniqueById[patient.patientId] = patient;
+    }
+    final uniquePatients = uniqueById.values.toList();
+
+    String? selectedValue = provider.selectedPatient?.patientId;
+    final hasSelected = selectedValue != null &&
+        uniquePatients.any((p) => p.patientId == selectedValue);
+    if (!hasSelected) {
+      selectedValue = uniquePatients.isNotEmpty ? uniquePatients.first.patientId : null;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -91,7 +135,7 @@ class HomeScreen extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
       ),
       child: DropdownButton<String>(
-        value: provider.selectedPatient?.patientId,
+        value: selectedValue,
         dropdownColor: AppColors.primaryEnd,
         underline: const SizedBox.shrink(),
         icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
@@ -100,7 +144,7 @@ class HomeScreen extends StatelessWidget {
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
-        items: provider.patients.map((patient) {
+        items: uniquePatients.map((patient) {
           return DropdownMenuItem<String>(
             value: patient.patientId,
             child: Text(
@@ -269,9 +313,9 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AddPatientDialog(
-        onAdd: (patientId, displayName) async {
+        onAdd: (patientId, displayName, {String? existingPassword}) async {
           final provider = Provider.of<PatientProvider>(context, listen: false);
-          await provider.addPatient(patientId, displayName);
+          await provider.addPatient(patientId, displayName, existingPassword: existingPassword);
         },
       ),
     );

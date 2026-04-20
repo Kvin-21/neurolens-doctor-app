@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import '../services/security_service.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
 
-enum _DialogStep { patientId, password, displayName }
+enum _DialogStep { patientId, displayName, password }
 
-/// Multi-step dialog for adding a new patient with password verification.
+/// Multi-step dialog for registering a new patient via the backend.
+///
+/// The doctor enters a patient ID; the backend creates the account and returns
+/// one-time credentials (password + result key) which are stored securely.
+/// The generated password should be shared with the patient for their login.
 class AddPatientDialog extends StatefulWidget {
-  final Function(String patientId, String displayName) onAdd;
+  final Function(String patientId, String displayName, {String? existingPassword}) onAdd;
 
   const AddPatientDialog({super.key, required this.onAdd});
 
@@ -16,13 +19,10 @@ class AddPatientDialog extends StatefulWidget {
 }
 
 class _AddPatientDialogState extends State<AddPatientDialog> {
-  static const _validPatientIds = ['P001', 'P002', 'P003'];
-
   final _formKey = GlobalKey<FormState>();
-  final _passwordController = TextEditingController();
   final _patientIdController = TextEditingController();
   final _displayNameController = TextEditingController();
-  final _security = SecurityService();
+  final _passwordController = TextEditingController();
 
   _DialogStep _currentStep = _DialogStep.patientId;
   bool _isLoading = false;
@@ -31,9 +31,9 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
 
   @override
   void dispose() {
-    _passwordController.dispose();
     _patientIdController.dispose();
     _displayNameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -45,43 +45,15 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
       return;
     }
 
-    if (!_validPatientIds.contains(patientId)) {
-      setState(() => _errorMessage = 'Invalid Patient ID. Valid IDs: P001, P002, P003');
+    if (patientId.length < 3) {
+      setState(() => _errorMessage = 'Patient ID must be at least 3 characters');
       return;
     }
 
     setState(() {
       _validatedPatientId = patientId;
-      _currentStep = _DialogStep.password;
+      _currentStep = _DialogStep.displayName;
       _errorMessage = null;
-    });
-  }
-
-  Future<void> _verifyPassword() async {
-    if (_security.isLockedOut()) {
-      final remaining = _security.getRemainingLockoutSeconds();
-      setState(() => _errorMessage = 'Too many failed attempts. Try again in ${remaining}s');
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final isValid = await _security.validatePassword(_passwordController.text);
-
-    setState(() {
-      _isLoading = false;
-      if (isValid) {
-        _currentStep = _DialogStep.displayName;
-        _errorMessage = null;
-      } else {
-        final remaining = _security.getRemainingAttempts();
-        _errorMessage = remaining > 0
-            ? 'Invalid password. $remaining attempt(s) remaining'
-            : 'Too many failed attempts. Locked out for 30s';
-      }
     });
   }
 
@@ -94,13 +66,29 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
     });
 
     try {
-      await widget.onAdd(_validatedPatientId, _displayNameController.text.trim());
+      final existingPassword = _currentStep == _DialogStep.password
+          ? _passwordController.text.trim()
+          : null;
+      await widget.onAdd(
+        _validatedPatientId,
+        _displayNameController.text.trim(),
+        existingPassword: existingPassword,
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-        _isLoading = false;
-      });
+      final msg = e.toString().replaceAll('Exception: ', '');
+      if (msg == 'existing_patient_needs_password' && _currentStep == _DialogStep.displayName) {
+        setState(() {
+          _currentStep = _DialogStep.password;
+          _errorMessage = null;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = msg;
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -146,10 +134,10 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
     switch (_currentStep) {
       case _DialogStep.patientId:
         return _buildPatientIdForm();
-      case _DialogStep.password:
-        return _buildPasswordForm();
       case _DialogStep.displayName:
         return _buildDisplayNameForm();
+      case _DialogStep.password:
+        return _buildPasswordForm();
     }
   }
 
@@ -178,31 +166,38 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
   }
 
   Widget _buildPasswordForm() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Patient ID: $_validatedPatientId',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        const Text('Enter password to continue:', style: TextStyle(fontSize: 14)),
-        const SizedBox(height: 16),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Password',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Patient ID: $_validatedPatientId',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
-          onSubmitted: (_) => _verifyPassword(),
-        ),
-        if (_errorMessage != null) ...[
-          const SizedBox(height: 12),
-          Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+          const SizedBox(height: 8),
+          const Text(
+            'This patient already exists. Enter their password to authenticate:',
+            style: TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: 'Patient Password',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            obscureText: true,
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Password is required' : null,
+            onFieldSubmitted: (_) => _addPatient(),
+          ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 12),
+            Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -277,9 +272,9 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
     switch (_currentStep) {
       case _DialogStep.patientId:
         return _validatePatientId;
-      case _DialogStep.password:
-        return _verifyPassword;
       case _DialogStep.displayName:
+        return _addPatient;
+      case _DialogStep.password:
         return _addPatient;
     }
   }
@@ -288,9 +283,9 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
     switch (_currentStep) {
       case _DialogStep.patientId:
         return 'Next';
-      case _DialogStep.password:
-        return 'Verify';
       case _DialogStep.displayName:
+        return 'Add Patient';
+      case _DialogStep.password:
         return 'Add Patient';
     }
   }
