@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:neurolens-doctor-app/models/patient_model.dart';
-import 'package:neurolens-doctor-app/models/session_model.dart';
-import 'package:neurolens-doctor-app/models/feature_models.dart';
-import 'package:neurolens-doctor-app/utils/validators.dart';
+import 'package:neurolens_doctor/models/patient_model.dart';
+import 'package:neurolens_doctor/models/session_model.dart';
+import 'package:neurolens_doctor/models/feature_models.dart';
+import 'package:neurolens_doctor/utils/validators.dart';
+import 'package:neurolens_doctor/utils/sgt.dart';
 
 /// Creates minimal acoustic features for testing.
 AcousticFeatures _sampleAcousticFeatures() {
@@ -149,6 +150,85 @@ void main() {
 
       final adDiagnosis = DiagnosisProbabilities(hc: 0.05, mci: 0.25, ad: 0.7);
       expect(adDiagnosis.getSeverity(), 'AD');
+    });
+  });
+
+  group('Trend direction', () {
+    Session _makeSession(int mmse, int daysAgo) {
+      return Session(
+        sessionId: 'S_$daysAgo',
+        timestamp: DateTime.now().subtract(Duration(days: daysAgo)),
+        mmseScore: mmse,
+        diagnosisProbabilities: DiagnosisProbabilities(hc: 0.5, mci: 0.3, ad: 0.2),
+        severityEstimate: SeverityEstimate(mmse: mmse, uncertainty: 1),
+        acousticFeatures: _sampleAcousticFeatures(),
+        linguisticFeatures: _sampleLinguisticFeatures(),
+        llmClinicalScores: _sampleClinicalScores(),
+      );
+    }
+
+    test('MMSE increasing returns improving', () {
+      final patient = Patient(
+        patientId: 'P002',
+        displayName: 'Improving',
+        sessions: [_makeSession(18, 30), _makeSession(22, 20), _makeSession(26, 0)],
+      );
+      expect(patient.getTrendIndicator(), '↑');
+    });
+
+    test('MMSE decreasing returns declining', () {
+      final patient = Patient(
+        patientId: 'P003',
+        displayName: 'Declining',
+        sessions: [_makeSession(28, 30), _makeSession(24, 15), _makeSession(20, 0)],
+      );
+      expect(patient.getTrendIndicator(), '↓');
+    });
+
+    test('small change returns stable', () {
+      final patient = Patient(
+        patientId: 'P004',
+        displayName: 'Stable',
+        sessions: [_makeSession(24, 30), _makeSession(25, 15), _makeSession(24, 0)],
+      );
+      expect(patient.getTrendIndicator(), '—');
+    });
+
+    test('respects days parameter for range filtering', () {
+      final patient = Patient(
+        patientId: 'P005',
+        displayName: 'RangeTest',
+        sessions: [
+          _makeSession(18, 60),
+          _makeSession(20, 45),
+          _makeSession(26, 5),
+          _makeSession(27, 2),
+          _makeSession(28, 0),
+        ],
+      );
+      expect(patient.getTrendIndicator(days: 10), '—');
+      expect(patient.getTrendIndicator(), '↑');
+    });
+  });
+
+  group('SGT formatting', () {
+    test('converts UTC to SGT (UTC+8)', () {
+      final utcTime = DateTime.utc(2026, 4, 14, 0, 0);
+      final sgt = toSGT(utcTime);
+      expect(sgt.hour, 8);
+      expect(sgt.day, 14);
+    });
+
+    test('formatSGT produces expected string', () {
+      final utcTime = DateTime.utc(2026, 4, 13, 17, 40);
+      final formatted = formatSGT(utcTime);
+      expect(formatted, '14 April 2026, 01:40');
+    });
+
+    test('formatSGTShort produces expected string', () {
+      final utcTime = DateTime.utc(2026, 4, 13, 17, 40);
+      final formatted = formatSGTShort(utcTime);
+      expect(formatted, '14 Apr 2026, 01:40');
     });
   });
 }

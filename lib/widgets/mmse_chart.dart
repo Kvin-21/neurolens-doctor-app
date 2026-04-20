@@ -1,22 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import '../models/session_model.dart';
 import '../utils/constants.dart';
 import '../utils/theme.dart';
+import '../utils/sgt.dart';
 
-/// Interactive line chart showing MMSE score trends over time.
 class MMSEChart extends StatefulWidget {
   final List<Session> sessions;
+  final int initialRangeIndex;
+  final ValueChanged<int>? onRangeChanged;
 
-  const MMSEChart({super.key, required this.sessions});
+  const MMSEChart({
+    super.key,
+    required this.sessions,
+    this.initialRangeIndex = 3,
+    this.onRangeChanged,
+  });
 
   @override
   State<MMSEChart> createState() => _MMSEChartState();
 }
 
 class _MMSEChartState extends State<MMSEChart> {
-  int _selectedRangeIndex = 3; // Default to 'All'
+  late int _selectedRangeIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRangeIndex = widget.initialRangeIndex;
+  }
 
   List<Session> get _filteredSessions {
     if (widget.sessions.isEmpty) return [];
@@ -78,7 +90,10 @@ class _MMSEChartState extends State<MMSEChart> {
         (index) => Padding(
           padding: const EdgeInsets.only(left: 8),
           child: InkWell(
-            onTap: () => setState(() => _selectedRangeIndex = index),
+            onTap: () {
+              setState(() => _selectedRangeIndex = index);
+              widget.onRangeChanged?.call(index);
+            },
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -110,7 +125,13 @@ class _MMSEChartState extends State<MMSEChart> {
     final verticalInterval = sessions.length > 10 ? sessions.length / 10 : 1.0;
     final bottomInterval = sessions.length > 10 ? sessions.length / 5 : 1.0;
 
-    return LineChart(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (_, animValue, __) => Opacity(
+        opacity: animValue,
+        child: LineChart(
       LineChartData(
         gridData: FlGridData(
           show: true,
@@ -153,7 +174,7 @@ class _MMSEChartState extends State<MMSEChart> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    DateFormat('MMM d').format(date),
+                    formatSGTChartLabel(date),
                     style: TextStyle(color: AppColors.cardText.withValues(alpha: 0.6), fontSize: 10),
                   ),
                 );
@@ -205,7 +226,7 @@ class _MMSEChartState extends State<MMSEChart> {
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 final session = sessions[spot.x.toInt()];
-                final date = DateFormat('dd MMM yyyy').format(session.timestamp);
+                final date = formatSGTShort(session.timestamp);
                 return LineTooltipItem(
                   'MMSE: ${spot.y.toInt()}/30\n$date',
                   const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -215,6 +236,8 @@ class _MMSEChartState extends State<MMSEChart> {
           ),
         ),
       ),
+    ),
+    ),
     );
   }
 }

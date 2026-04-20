@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/patient_model.dart';
 import '../utils/constants.dart';
 import '../utils/theme.dart';
+import '../utils/sgt.dart';
 
-/// Top-level summary cards showing MMSE, severity, session count, and trend.
 class OverviewCards extends StatelessWidget {
   final Patient patient;
+  final int? trendDays;
 
-  const OverviewCards({super.key, required this.patient});
+  const OverviewCards({super.key, required this.patient, this.trendDays});
 
   @override
   Widget build(BuildContext context) {
     final latestDate = patient.getLatestSessionDate();
-    final formattedDate = latestDate != null ? DateFormat('dd MMM yyyy').format(latestDate) : 'N/A';
+    final formattedDate = latestDate != null ? formatSGTShort(latestDate) : 'N/A';
 
     return Row(
       children: [
@@ -151,7 +151,7 @@ class OverviewCards extends StatelessWidget {
   }
 
   Widget _buildTrendCard(BuildContext context) {
-    final trend = patient.getTrendIndicator();
+    final trend = patient.getTrendIndicator(days: trendDays);
 
     final (trendColour, trendText) = switch (trend) {
       '↑' => (AppColors.success, 'Improving'),
