@@ -7,7 +7,6 @@ import '../widgets/clinical_scores_widget.dart';
 import '../widgets/session_history_list.dart';
 import '../utils/constants.dart';
 import 'features_screen.dart';
-import 'image_screen.dart';
 import 'report_screen.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
@@ -32,7 +31,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -57,7 +56,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
               children: [
                 _buildDashboard(),
                 FeaturesScreen(patient: widget.patient),
-                ImageScreen(patient: widget.patient),
                 ReportScreen(patient: widget.patient),
               ],
             ),
@@ -106,7 +104,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen>
         tabs: const [
           Tab(text: 'Dashboard'),
           Tab(text: 'Detailed Features'),
-          Tab(text: 'Images'),
           Tab(text: 'Reports'),
         ],
       ),
