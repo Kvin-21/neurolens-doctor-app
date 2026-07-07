@@ -61,47 +61,50 @@ class SessionHistoryList extends StatelessWidget {
     final colour = AppColors.getMMSEColour(session.mmseScore);
     final formattedDate = formatSGT(session.timestamp);
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => _showSessionDetail(context, session),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [colour, colour.withValues(alpha: 0.7)]),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  session.mmseScore.toString(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _showSessionDetail(context, session),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [colour, colour.withValues(alpha: 0.7)]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    session.mmseScore.toString(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                formattedDate,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.cardText),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  formattedDate,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.cardText),
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: colour.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colour.withValues(alpha: 0.3)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colour.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colour.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  session.diagnosisProbabilities.getSeverity(),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colour),
+                ),
               ),
-              child: Text(
-                session.diagnosisProbabilities.getSeverity(),
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colour),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

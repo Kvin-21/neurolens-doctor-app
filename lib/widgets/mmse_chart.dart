@@ -89,25 +89,29 @@ class _MMSEChartState extends State<MMSEChart> {
         AppConstants.timeRangeLabels.length,
         (index) => Padding(
           padding: const EdgeInsets.only(left: 8),
-          child: InkWell(
-            onTap: () {
-              setState(() => _selectedRangeIndex = index);
-              widget.onRangeChanged?.call(index);
-            },
+          child: Material(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: _selectedRangeIndex == index ? AppColors.primaryGradient : null,
-                color: _selectedRangeIndex == index ? null : Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                AppConstants.timeRangeLabels[index],
-                style: TextStyle(
-                  color: _selectedRangeIndex == index ? Colors.white : AppColors.cardText,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+            child: InkWell(
+              onTap: () {
+                setState(() => _selectedRangeIndex = index);
+                widget.onRangeChanged?.call(index);
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: _selectedRangeIndex == index ? AppColors.primaryGradient : null,
+                  color: _selectedRangeIndex == index ? null : Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  AppConstants.timeRangeLabels[index],
+                  style: TextStyle(
+                    color: _selectedRangeIndex == index ? Colors.white : AppColors.cardText,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),

@@ -19,7 +19,7 @@ Future<void> main() async {
     minimumSize: Size(AppConstants.minWindowWidth, AppConstants.minWindowHeight),
     center: true,
     title: AppConstants.appTitle,
-    backgroundColor: Colors.transparent,
+    backgroundColor: Colors.white,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
   );

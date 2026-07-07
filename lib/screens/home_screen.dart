@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '../models/patient_model.dart';
 import '../providers/patient_provider.dart';
 import '../utils/constants.dart';
 import 'patient_dashboard_screen.dart';
@@ -27,53 +29,49 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(context),
-              Expanded(
-                child: Consumer<PatientProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.isLoading) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(color: Colors.white),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Loading patient data...',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    if (!provider.hasPatients || provider.selectedPatient == null) {
-                      return _buildEmptyState(context);
-                    }
-
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: PatientDashboardScreen(
-                        key: ValueKey(provider.selectedPatient!.patientId),
-                        patient: provider.selectedPatient!,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+          child: Consumer<PatientProvider>(
+            builder: (context, provider, _) {
+              return Column(
+                children: [
+                  _buildAppBar(context, provider),
+                  Expanded(child: _buildBody(context, provider)),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildBody(BuildContext context, PatientProvider provider) {
+    if (provider.isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 16),
+            Text(
+              'Loading patient data...',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!provider.hasPatients) {
+      return _buildEmptyState(context);
+    }
+
+    return _buildHomeContent(context, provider);
+  }
+
+  Widget _buildAppBar(BuildContext context, PatientProvider provider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -86,95 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
           ),
           const Spacer(),
-          Consumer<PatientProvider>(
-            builder: (context, provider, _) {
-              if (!provider.hasPatients) return const SizedBox.shrink();
-
-              return Row(
-                children: [
-                  _buildPatientSelector(context, provider),
-                  const SizedBox(width: 16),
-                  _buildRemovePatientButton(context, provider),
-                  const SizedBox(width: 16),
-                  _buildRefreshButton(provider),
-                ],
-              );
-            },
-          ),
-          const SizedBox(width: 16),
-          _buildAddPatientButton(context),
+          if (provider.hasPatients) ...[
+            _buildRefreshButton(provider),
+            const SizedBox(width: 12),
+            _buildAddPatientButton(context),
+          ],
         ],
-      ),
-    );
-  }
-
-  Widget _buildPatientSelector(BuildContext context, PatientProvider provider) {
-    final uniqueById = <String, dynamic>{};
-    for (final patient in provider.patients) {
-      uniqueById[patient.patientId] = patient;
-    }
-    final uniquePatients = uniqueById.values.toList();
-
-    String? selectedValue = provider.selectedPatient?.patientId;
-    final hasSelected = selectedValue != null &&
-        uniquePatients.any((p) => p.patientId == selectedValue);
-    if (!hasSelected) {
-      selectedValue = uniquePatients.isNotEmpty ? uniquePatients.first.patientId : null;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.25),
-            Colors.white.withValues(alpha: 0.15),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-      ),
-      child: DropdownButton<String>(
-        value: selectedValue,
-        dropdownColor: AppColors.primaryEnd,
-        underline: const SizedBox.shrink(),
-        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-        items: uniquePatients.map((patient) {
-          return DropdownMenuItem<String>(
-            value: patient.patientId,
-            child: Text(
-              '${patient.displayName} (${patient.patientId})',
-              style: const TextStyle(color: Colors.white),
-            ),
-          );
-        }).toList(),
-        onChanged: (patientId) {
-          if (patientId != null) provider.selectPatient(patientId);
-        },
-      ),
-    );
-  }
-
-  Widget _buildRemovePatientButton(BuildContext context, PatientProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.25),
-            Colors.white.withValues(alpha: 0.15),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: IconButton(
-        onPressed: () => _showRemovePatientDialog(context, provider),
-        icon: const Icon(Icons.person_remove, color: Colors.white),
-        tooltip: 'Remove Patient',
       ),
     );
   }
@@ -309,6 +224,204 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildHomeContent(BuildContext context, PatientProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                ShaderMask(
+                  shaderCallback: (bounds) {
+                    return LinearGradient(
+                      colors: [
+                        const Color(0xFF00D9FF),
+                        const Color(0xFF00F5FF),
+                        const Color(0xFF00FF66),
+                        const Color(0xFF00F5FF),
+                        const Color(0xFF00D9FF),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds);
+                  },
+                  child: Text(
+                    "Hi, how's your day?",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.baloo2(
+                      color: Colors.white,
+                      fontSize: 34,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Select a patient to view their summary and scores',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.88),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          Expanded(child: _buildPatientList(context, provider)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPatientList(BuildContext context, PatientProvider provider) {
+    final hasManyPatients = provider.patients.length >= 7;
+
+    return ListView.separated(
+      physics: hasManyPatients
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      itemCount: provider.patients.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
+      itemBuilder: (context, index) {
+        final patient = provider.patients[index];
+        return _buildPatientCard(context, provider, patient);
+      },
+    );
+  }
+
+  Widget _buildPatientCard(BuildContext context, PatientProvider provider, Patient patient) {
+    final severity = patient.getLatestSeverity();
+    final mmse = patient.getLatestMMSE();
+    final mmseText = mmse > 0 ? mmse.toString() : '—';
+
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PatientDashboardScreen(patient: patient),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    patient.displayName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.cardText,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: ${patient.patientId}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.cardText.withValues(alpha: 0.55),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _buildSeverityChip(severity),
+            const SizedBox(width: 8),
+            _buildMetricChip('MMSE', mmseText),
+            const SizedBox(width: 6),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'remove') {
+                  _showRemovePatientDialog(context, provider, patient);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'remove',
+                  child: Text('Remove patient'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeverityChip(String severity) {
+    final color = _severityColor(severity);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        severity,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricChip(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primaryStart.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+          color: AppColors.primaryStart,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
+  Color _severityColor(String severity) {
+    switch (severity.toUpperCase()) {
+      case 'HC':
+        return const Color(0xFF2E8B57);
+      case 'MCI':
+        return const Color(0xFFD08700);
+      case 'AD':
+        return const Color(0xFFC0392B);
+      default:
+        return const Color(0xFF7F8C8D);
+    }
+  }
+
   void _showAddPatientDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -321,10 +434,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showRemovePatientDialog(BuildContext context, PatientProvider provider) {
-    final patient = provider.selectedPatient;
-    if (patient == null) return;
-
+  void _showRemovePatientDialog(
+    BuildContext context,
+    PatientProvider provider,
+    Patient patient,
+  ) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(

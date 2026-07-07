@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
 
@@ -19,6 +20,7 @@ class AddPatientDialog extends StatefulWidget {
 }
 
 class _AddPatientDialogState extends State<AddPatientDialog> {
+  static const _secure = FlutterSecureStorage();
   final _formKey = GlobalKey<FormState>();
   final _patientIdController = TextEditingController();
   final _displayNameController = TextEditingController();
@@ -66,6 +68,7 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
     });
 
     try {
+      final isNewPatient = _currentStep == _DialogStep.displayName;
       final existingPassword = _currentStep == _DialogStep.password
           ? _passwordController.text.trim()
           : null;
@@ -74,6 +77,12 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
         _displayNameController.text.trim(),
         existingPassword: existingPassword,
       );
+      if (isNewPatient) {
+        final password = await _secure.read(key: 'pwd_$_validatedPatientId');
+        if (password != null && password.isNotEmpty && mounted) {
+          await _showPasswordDialog(password);
+        }
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       final msg = e.toString().replaceAll('Exception: ', '');
@@ -288,5 +297,67 @@ class _AddPatientDialogState extends State<AddPatientDialog> {
       case _DialogStep.password:
         return 'Add Patient';
     }
+  }
+
+  Future<void> _showPasswordDialog(String password) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Patient Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Patient ID: $_validatedPatientId'),
+            const SizedBox(height: 12),
+            const Text('Share this password with the patient:'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: SelectableText(
+                password,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => _showQrCodeDialog(),
+            child: const Text('Show QR code'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showQrCodeDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Patient QR Code'),
+        content: Image.asset(
+          'lib/assets/images/qrcode_www.google.com.png',
+          height: 220,
+          fit: BoxFit.contain,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 }
